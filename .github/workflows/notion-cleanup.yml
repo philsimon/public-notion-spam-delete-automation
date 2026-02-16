@@ -1,0 +1,48 @@
+name: Notion Database Cleanup
+
+on:
+  schedule:
+    # Daily at midnight UTC
+    - cron: '0 0 * * *'
+
+  # Manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (no actual deletions)'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Notion cleanup
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          python scripts/notion_cleanup.py --config config/deletion_rules.json
+
+      - name: Upload cleanup logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cleanup-logs-${{ github.run_number }}
+          path: logs/
+          retention-days: 30
