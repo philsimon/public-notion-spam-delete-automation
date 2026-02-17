@@ -3,7 +3,8 @@ name: Notion Database Cleanup
 on:
   schedule:
     # Daily at midnight UTC
-    - cron: '0 0 * * *'
+    # - cron: '0 0 * * *'
+    workflow_dispatch:  # Add this to allow manual runs
 
   # Manual trigger for testing
   workflow_dispatch:
